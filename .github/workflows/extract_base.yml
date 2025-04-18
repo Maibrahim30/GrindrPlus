@@ -1,51 +1,41 @@
-name: Extract and Upload base APK
+name: Extract and Upload IPA
 
 on:
   workflow_dispatch:
     inputs:
-      bundle_url:
-        description: "URL to the bundle"
+      ipa_url:
+        description: "URL to the IPA bundle"
         required: true
         default: ""
 
 jobs:
   extract-and-upload:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
     - name: Create working directory
-      run: mkdir extracted_bundle
+      run: mkdir extracted_ipa
 
-    - name: Download bundle
+    - name: Download IPA bundle
       run: |
-        echo "Downloading bundle from ${{ github.event.inputs.bundle_url }}"
-        curl -L -o extracted_bundle/bundle.zip "${{ github.event.inputs.bundle_url }}"
+        echo "Downloading IPA from ${{ github.event.inputs.ipa_url }}"
+        curl -L -o extracted_ipa/app.ipa "${{ github.event.inputs.ipa_url }}"
 
-    - name: Extract bundle
+    - name: Verify IPA exists
       run: |
-        unzip extracted_bundle/bundle.zip -d extracted_bundle
-
-    - name: List extracted files
-      run: |
-        echo "Contents of the extracted folder:"
-        ls extracted_bundle
-
-    - name: Locate and upload base APK
-      run: |
-        if [ -f extracted_bundle/base.apk ]; then
-          echo "base.apk found. Preparing to upload..."
+        if [ -f extracted_ipa/app.ipa ]; then
+          echo "app.ipa found. Preparing to upload..."
         else
-          echo "base.apk not found. Make sure the bundle contains this file."
+          echo "app.ipa not found. Make sure the URL is correct and the file is accessible."
           exit 1
         fi
-      shell: bash
 
-    - name: Upload base APK
+    - name: Upload IPA
       if: success()
       uses: actions/upload-artifact@v3
       with:
-        name: base.apk
-        path: extracted_bundle/base.apk
+        name: app.ipa
+        path: extracted_ipa/app.ipa
